@@ -1,0 +1,4 @@
+include ':paytabs_sdk-v4.0.1'
+include ':paytabs_sdk-v4.0.1'
+include ':app'
+rootProject.name = "ShoppingList"
