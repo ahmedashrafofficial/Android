@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">Measure Distance</string>
+    <string name="reset">Reset</string>
+    <string name="calculate">Calculate</string>
+    <string name="image">Image</string>
+    <string name="distance_between_you_and_object">Distance between you and Object</string>
+    <string name="distance_between_two_objects">Distance between two objects</string>
+    <string name="height_of_object">Height of object</string>
+    <string name="aim_to_the_bottom_of_the_object_on_the_ground_when_measuring_distance">Aim to the bottom of the object (on the ground) when measuring distance</string>
+    <string name="distance1">Distance1 :</string>
+    <string name="_1">1</string>
+    <string name="distance2">Distance2 :</string>
+    <string name="_2">2</string>
+    <string name="distance">Distance(m)</string>
+    <string name="height">Height(m)</string>
+    <string name="personHeight">1.75</string>
+    <string name="type_your_height">Type your Height(m)</string>
+</resources>
