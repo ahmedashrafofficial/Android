@@ -1,5 +1,6 @@
 package com.codeprecious.fakedownloadapp.retrofit
 
+import com.codeprecious.fakedownloadapp.model.Data
 import retrofit2.http.GET
 
 
@@ -10,5 +11,5 @@ interface RetrofitApi {
     }
 
     @GET("movies")
-    fun getFakeData()
+    fun getFakeData(): List<Data>
 }
