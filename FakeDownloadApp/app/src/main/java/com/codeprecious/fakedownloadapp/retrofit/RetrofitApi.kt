@@ -1,6 +1,7 @@
 package com.codeprecious.fakedownloadapp.retrofit
 
 import com.codeprecious.fakedownloadapp.model.Data
+import io.reactivex.rxjava3.core.Flowable
 import retrofit2.http.GET
 
 
@@ -11,5 +12,5 @@ interface RetrofitApi {
     }
 
     @GET("movies")
-    fun getFakeData(): List<Data>
+    fun getFakeData(): Flowable<List<Data>>
 }
