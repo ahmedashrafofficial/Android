@@ -1,7 +1,8 @@
-package com.codeprecious.fakedownloadapp
+package com.codeprecious.fakedownloadapp.ui
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import com.codeprecious.fakedownloadapp.R
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
