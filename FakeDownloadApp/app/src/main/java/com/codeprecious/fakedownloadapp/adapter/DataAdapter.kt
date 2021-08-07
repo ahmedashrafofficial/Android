@@ -1,7 +1,12 @@
 package com.codeprecious.fakedownloadapp.adapter
 
 import android.annotation.SuppressLint
+import android.app.DownloadManager
+import android.content.Context.DOWNLOAD_SERVICE
+import android.database.Cursor
 import android.graphics.Color
+import android.net.Uri
+import android.os.Environment
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -15,6 +20,11 @@ import com.codeprecious.fakedownloadapp.model.Data
 import com.downloader.Error
 import com.downloader.OnDownloadListener
 import com.downloader.PRDownloader
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
+import io.reactivex.rxjava3.core.Observer
+import io.reactivex.rxjava3.disposables.CompositeDisposable
+import io.reactivex.rxjava3.disposables.Disposable
+import io.reactivex.rxjava3.schedulers.Schedulers
 import javax.inject.Inject
 
 
@@ -23,7 +33,8 @@ class DataAdapter @Inject constructor(
 
     private lateinit var onClickListener: OnClickListener
     private var lastChecked = -1
-    private var downloading: MutableList<Int> = ArrayList()
+    private var downloadingFiles: MutableList<Int> = ArrayList()
+    private val disposables = CompositeDisposable()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val binding =
@@ -42,14 +53,15 @@ class DataAdapter @Inject constructor(
     @SuppressLint("NotifyDataSetChanged")
     inner class ViewHolder(private val binding: AdapterDataBinding) :
         RecyclerView.ViewHolder(binding.root) {
+        var downloading = true
 
         init {
             binding.btnDownload.setOnClickListener {
                 if (binding.btnDownload.isEnabled) {
                     binding.btnDownload.isEnabled = false
-                    download(getItem(adapterPosition).url, getItem(adapterPosition).name)
+                    downloadFiles(getItem(adapterPosition).url, getItem(adapterPosition).name)
                     itemView.setBackgroundColor(Color.CYAN)
-                    downloading.add(adapterPosition)
+                    downloadingFiles.add(adapterPosition)
                 }
             }
             itemView.setOnClickListener {
@@ -70,7 +82,7 @@ class DataAdapter @Inject constructor(
             }
 
             if (lastChecked != adapterPosition) {
-                if (downloading.contains(adapterPosition)) {
+                if (downloadingFiles.contains(adapterPosition)) {
                     itemView.setBackgroundColor(Color.GREEN)
                     binding.btnDownload.isEnabled = false
                 } else {
@@ -81,7 +93,11 @@ class DataAdapter @Inject constructor(
         }
 
         private fun download(url: String, fileName: String) {
-            PRDownloader.download(url, itemView.context.filesDir.absolutePath, fileName)
+            PRDownloader.download(
+                url,
+                Environment.DIRECTORY_DOWNLOADS,
+                fileName
+            )
                 .build()
                 .setOnProgressListener {
                     binding.apply {
@@ -107,10 +123,6 @@ class DataAdapter @Inject constructor(
                                 Toast.LENGTH_LONG
                             )
                                 .show()
-                            Log.d(
-                                "asd",
-                                "onDownloadComplete: ${itemView.context.filesDir.absolutePath}"
-                            )
                         }
                     }
 
@@ -124,6 +136,78 @@ class DataAdapter @Inject constructor(
                 })
         }
 
+        private fun downloadFiles(uri: String, fileName: String) {
+            val request = DownloadManager.Request(Uri.parse(uri))
+            request.setTitle(fileName)
+            request.setDescription("Downloading file, Please wait")
+            val cookie = android.webkit.CookieManager.getInstance().getCookie(uri)
+            request.addRequestHeader("cookie", cookie)
+            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+            request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName)
+
+            val manager: DownloadManager =
+                itemView.context.getSystemService(DOWNLOAD_SERVICE) as DownloadManager
+
+            val downloadId = manager.enqueue(request)
+
+            Toast.makeText(itemView.context, "Download Started", Toast.LENGTH_LONG).show()
+
+            io.reactivex.rxjava3.core.Observable.fromCallable {
+                downloading(downloadId, manager)
+            }.subscribeOn(Schedulers.io())
+                .repeatUntil {
+                    !downloading
+                }
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(object : Observer<Int> {
+                    override fun onSubscribe(d: Disposable?) {
+
+                    }
+
+                    override fun onNext(percentage: Int?) {
+                        Log.d("asd", "onNext: $percentage")
+                        binding.apply {
+                            progressBarDownload.isVisible = true
+                            tvPercentage.isVisible = true
+                            tvPercentage.text = "${percentage}%"
+                        }
+                    }
+
+                    override fun onError(e: Throwable?) {
+                    }
+
+                    override fun onComplete() {
+
+                    }
+                })
+        }
+
+        private fun downloading(downloadId: Long, manager: DownloadManager): Int {
+            val q = DownloadManager.Query()
+            q.setFilterById(downloadId)
+
+            val cursor: Cursor = manager.query(q)
+            cursor.moveToFirst()
+            val bytes_downloaded = cursor.getInt(
+                cursor
+                    .getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR)
+            )
+            val bytes_total =
+                cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES))
+
+            binding.apply {
+                progressBarDownload.max = bytes_total
+                progressBarDownload.progress = bytes_downloaded
+            }
+
+            if (cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_STATUS)) == DownloadManager.STATUS_SUCCESSFUL) {
+                downloading = false
+            }
+
+            cursor.close()
+
+            return (bytes_downloaded * 100L / bytes_total).toInt()
+        }
     }
 
     interface OnClickListener {

@@ -61,33 +61,5 @@ class MainActivity : AppCompatActivity() {
             })
         }
 
-//        hasWriteStoragePermission()
-    }
-
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-    }
-
-    @RequiresApi(Build.VERSION_CODES.M)
-    private fun hasWriteStoragePermission(): Boolean {
-        if (ActivityCompat.checkSelfPermission(
-                baseContext,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            requestPermissions(
-                arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
-                1
-            )
-
-            return false
-        }
-
-
-        return true
     }
 }
