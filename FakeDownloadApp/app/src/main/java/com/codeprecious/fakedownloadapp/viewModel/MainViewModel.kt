@@ -12,7 +12,7 @@ class MainViewModel @Inject constructor(
     private val repository: Repository
 ) : ViewModel() {
 
-    fun getData(): LiveData<List<Data>> {
+    fun getData(): LiveData<List<Data>>? {
         return repository.getData()
     }
 }
