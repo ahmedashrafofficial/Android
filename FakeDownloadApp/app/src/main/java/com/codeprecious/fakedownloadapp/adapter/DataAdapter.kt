@@ -31,7 +31,6 @@ import javax.inject.Inject
 class DataAdapter @Inject constructor(
 ) : ListAdapter<Data, DataAdapter.ViewHolder>(COMPARATOR()) {
 
-    private lateinit var onClickListener: OnClickListener
     private var lastChecked = -1
     private var downloadingFiles: MutableList<Int> = ArrayList()
     private val disposables = CompositeDisposable()
@@ -44,10 +43,6 @@ class DataAdapter @Inject constructor(
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         holder.bind()
-    }
-
-    fun setListener(onClickListener: OnClickListener) {
-        this.onClickListener = onClickListener
     }
 
     @SuppressLint("NotifyDataSetChanged")
@@ -161,7 +156,7 @@ class DataAdapter @Inject constructor(
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(object : Observer<Int> {
                     override fun onSubscribe(d: Disposable?) {
-
+                        disposables.add(d)
                     }
 
                     override fun onNext(percentage: Int?) {
@@ -174,10 +169,28 @@ class DataAdapter @Inject constructor(
                     }
 
                     override fun onError(e: Throwable?) {
+                        Toast.makeText(
+                            itemView.context,
+                            e?.message,
+                            Toast.LENGTH_LONG
+                        )
+                            .show()
                     }
 
                     override fun onComplete() {
+                        binding.apply {
+                            progressBarDownload.max = 100
+                            progressBarDownload.progress = 100
+                            tvPercentage.text = "100%"
+                            itemView.setBackgroundColor(Color.GREEN)
 
+                            Toast.makeText(
+                                itemView.context,
+                                "Download complete",
+                                Toast.LENGTH_LONG
+                            )
+                                .show()
+                        }
                     }
                 })
         }
@@ -208,10 +221,6 @@ class DataAdapter @Inject constructor(
 
             return (bytes_downloaded * 100L / bytes_total).toInt()
         }
-    }
-
-    interface OnClickListener {
-        fun onClick(data: Data)
     }
 
     class COMPARATOR : DiffUtil.ItemCallback<Data>() {

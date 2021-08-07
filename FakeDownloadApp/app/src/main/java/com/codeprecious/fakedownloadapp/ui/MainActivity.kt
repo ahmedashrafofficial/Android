@@ -50,15 +50,8 @@ class MainActivity : AppCompatActivity() {
             }
 
             viewModel.getData()?.observe(this@MainActivity) {
-                if (it != null) {
-                    dataAdapter.submitList(it)
-                }
+                dataAdapter.submitList(it)
             }
-
-            dataAdapter.setListener(object : DataAdapter.OnClickListener {
-                override fun onClick(data: Data) {
-                }
-            })
         }
 
     }
